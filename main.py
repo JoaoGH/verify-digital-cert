@@ -23,7 +23,20 @@ def addTrustedCertificate():
         print("Arquivo não encontrado")
 
 def validateCertificate():
-    print("validateCertificate")
+    path = input("Insira o caminho do arquivo")
+    if os.path.isfile(path):
+        if path.endswith(".crt") or path.endswith(".cer"):
+            ca = open(path, 'rb').read()
+            certificado = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, ca)
+            try:
+                context = OpenSSL.crypto.X509StoreContext(store, certificado)
+                context.verify_certificate()
+                print("Certificado confiavel")
+            except OpenSSL.crypto.X509StoreContextError as e:
+                print("Certificado não confiavel")
+                print(e)
+    else:
+        print("Arquivo não encontrado")
 
 loadTrusted()
 opc = 0
