@@ -1,5 +1,6 @@
 import os
 import OpenSSL
+import shutil
 
 store = OpenSSL.crypto.X509Store()
 
@@ -11,7 +12,15 @@ def loadTrusted():
         store.add_cert(confiavel)
 
 def addTrustedCertificate():
-    print("addTrustedCertificate")
+    path = input("Insira o caminho do certificado raiz")
+    if os.path.isfile(path):
+        if path.endswith(".crt") or path.endswith(".cer"):
+            ca = open(path, 'rb').read()
+            confiavel = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, ca)
+            store.add_cert(confiavel)
+            shutil.copy(path, "./trusted/")
+    else:
+        print("Arquivo não encontrado")
 
 def validateCertificate():
     print("validateCertificate")
