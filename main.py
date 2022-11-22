@@ -1,3 +1,14 @@
+import os
+import OpenSSL
+
+store = OpenSSL.crypto.X509Store()
+
+def loadTrusted():
+    certificados = os.listdir("./trusted/")
+    for it in certificados:
+        certficate = open("./trusted/" + it, "rb").read()
+        confiavel = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certficate)
+        store.add_cert(confiavel)
 
 def addTrustedCertificate():
     print("addTrustedCertificate")
@@ -5,6 +16,7 @@ def addTrustedCertificate():
 def validateCertificate():
     print("validateCertificate")
 
+loadTrusted()
 opc = 0
 while opc != 4:
     print()
