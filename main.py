@@ -25,30 +25,33 @@ def addTrustedCertificate():
 
 def validateCertificate():
     path = input("Insira o caminho do arquivo")
-    valid = []
+    valid = False
+    untillRootCA = []
     if os.path.isfile(path):
         if path.endswith(".crt") or path.endswith(".cer"):
             cert = open(path, 'rb').read()
             certificado = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
             chain = resolve(cert)
             for it in chain:
+                if it.serial != certificado.get_serial_number():
+                    untillRootCA.append(it)
                 for confiavel in store:
                     if confiavel.get_serial_number() == it.serial:
-                        valid.append(it)
+                        valid = True
                         break
             if valid:
-                showValidChain(valid, certificado)
+                showValidChain(untillRootCA, certificado)
             else:
                 print("Certificado não confiavel")
     else:
         print("Arquivo não encontrado")
 
 def showValidChain(validators, certificate):
-    print("Certificado válido, abaixo a cadeia do mesmo até a raiz.")
-    print(certificate.get_subject().CN)
+    print("Certificado válido, abaixo a cadeia do mesmo até a raiz:")
+    print(" ➝ " + certificate.get_subject().CN)
     i = 1
     for it in validators:
-        print(("\t" * i) + "↳ " + it.common_name)
+        print(("\t" * i) + " ↳ " + it.common_name)
         i += 1
         if it.is_root:
             break
