@@ -1,15 +1,16 @@
 import os
 import OpenSSL
 import shutil
+from cert_chain_resolver.resolver import resolve
 
-store = OpenSSL.crypto.X509Store()
+store = []
 
 def loadTrusted():
     certificados = os.listdir("./trusted/")
     for it in certificados:
         certficate = open("./trusted/" + it, "rb").read()
         confiavel = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certficate)
-        store.add_cert(confiavel)
+        store.append(confiavel)
 
 def addTrustedCertificate():
     path = input("Insira o caminho do certificado raiz")
@@ -17,24 +18,28 @@ def addTrustedCertificate():
         if path.endswith(".crt") or path.endswith(".cer"):
             ca = open(path, 'rb').read()
             confiavel = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, ca)
-            store.add_cert(confiavel)
+            store.append(confiavel)
             shutil.copy(path, "./trusted/")
     else:
         print("Arquivo não encontrado")
 
 def validateCertificate():
     path = input("Insira o caminho do arquivo")
+    valid = False
     if os.path.isfile(path):
         if path.endswith(".crt") or path.endswith(".cer"):
-            ca = open(path, 'rb').read()
-            certificado = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, ca)
-            try:
-                context = OpenSSL.crypto.X509StoreContext(store, certificado)
-                context.verify_certificate()
-                print("Certificado confiavel")
-            except OpenSSL.crypto.X509StoreContextError as e:
+            cert = open(path, 'rb').read()
+            chain = resolve(cert)
+            for it in chain:
+                if valid:
+                    break
+                for confiavel in store:
+                    if confiavel.get_serial_number() == it.serial:
+                        print("O certificado informado é valido pela: " + it.common_name)
+                        valid = True
+                        break
+            if not valid:
                 print("Certificado não confiavel")
-                print(e)
     else:
         print("Arquivo não encontrado")
 
